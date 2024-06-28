@@ -1,14 +1,16 @@
 #===============================================================================
-# Lire les données receuilli aux sites à Kenauk pendant la saison des sucres 
-# 2024
+# Lire les données recueillies aux sites du dispositif d'ecxlusion de 
+# précipitation d'Audrey Maheu (UQO) à Kenauk pendant la saison des sucres 
+# 2024. Nous avons entaillé 68 érables, dont 34 étaient dans des parcelles 
+# d'exclusion et 34 dans les parcelles témoin. 
 #-------------------------------------------------------------------------------
 
-# dépendances ----
+# dépendances ------------------------------------------------------------------
 if (!existsFunction("read_excel")) library("readxl")
 if (!existsFunction("%>%")) library("tidyverse")
 
 # lire les données du fichier excel (Données_sécheresse_2024.xlsx) qui sont 
-# dans un format longue ----
+# dans un format longue --------------------------------------------------------
 d_mesures <- read_excel(path = "../données/Donnée_sécheresse_2024.xlsx",
                         sheet = "Mesures",
                         col_names = c("s", "t", "a", "id", "dhp", "sec_lettre", 
@@ -22,11 +24,11 @@ d_mesures <- read_excel(path = "../données/Donnée_sécheresse_2024.xlsx",
          C = as.logical(C),
          G = as.logical(G))
 
-# liste chronologique des dates de mesures ----
+# liste chronologique des dates de mesures -------------------------------------
 dates <- unique(d_mesures$date)[order(unique(d_mesures$date))]
 
 # lire les poids des barils vides du fichier excel 
-# (Données_sécheresse_2024.xlsx) ----
+# (Données_sécheresse_2024.xlsx) -----------------------------------------------
 d_barils <- read_excel(path = "../données/Donnée_sécheresse_2024.xlsx",
                        sheet = "Barils",
                        col_names = c("n", "id", "p_baril"),
@@ -34,14 +36,14 @@ d_barils <- read_excel(path = "../données/Donnée_sécheresse_2024.xlsx",
                        na = "NA") %>% 
   select(-n)
 
-# fusionne les données du poids des barils et les données des mesures ----
+# fusionne les données du poids des barils et les données des mesures ----------
 d <- left_join(d_mesures, d_barils, by = "id")
 
 # calculer le poids résiduel de la sève dans le barils (p. ex. glace à 
-# l'intérieur du baril) ----
+# l'intérieur du baril) --------------------------------------------------------
 d <- d %>% mutate(p_res = ifelse (p_vide - p_baril > 0, p_vide - p_baril, 0))
 
-# boucle pour corriger le poids de sève en tenant compte du poids résiduel ----
+# boucle pour corriger le poids de sève en tenant compte du poids résiduel -----
 d$p_corrigé <- NA
 for (r in 1:dim(d)[1]) {
   
@@ -86,5 +88,4 @@ d$vol_s[d$vol_s < 0] <- 0
 # nettoyer l'espace de travail -------------------------------------------------
 rm(d_barils, d_mesures, a_coef, b_coef, c_coef, d_coef, date_precédente, dates, 
    r)
-
 #===============================================================================
